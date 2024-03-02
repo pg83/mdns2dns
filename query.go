@@ -9,15 +9,19 @@ import (
 	"github.com/miekg/dns"
 )
 
+var (
+	MalformedRec = errors.New("malformed record")
+)
+
 func parseLine(data string) (string, error) {
 	if !strings.Contains(data, ".local.") {
-		return "", errors.New("malformed record")
+		return "", MalformedRec
 	}
 
 	fields := strings.Split(data, " ")
 
 	if len(fields) < 1 {
-		return "", errors.New("malformed record")
+		return "", MalformedRec
 	}
 
 	real := []string{}
@@ -29,7 +33,7 @@ func parseLine(data string) (string, error) {
 	}
 
 	if len(real) < 2 {
-		return "", errors.New("malformed record")
+		return "", MalformedRec
 	}
 
 	return real[len(real) - 2], nil
