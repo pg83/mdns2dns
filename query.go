@@ -13,15 +13,15 @@ var (
 	MalformedRec = errors.New("malformed record")
 )
 
-func parseLine(data string) (string, error) {
+func parseLine(data string) (*string, error) {
 	if !strings.Contains(data, ".local.") {
-		return "", MalformedRec
+		return nil, MalformedRec
 	}
 
 	fields := strings.Split(data, " ")
 
 	if len(fields) < 1 {
-		return "", MalformedRec
+		return nil, MalformedRec
 	}
 
 	real := []string{}
@@ -33,13 +33,13 @@ func parseLine(data string) (string, error) {
 	}
 
 	if len(real) < 2 {
-		return "", MalformedRec
+		return nil, MalformedRec
 	}
 
-	return real[len(real) - 2], nil
+	return &real[len(real) - 2], nil
 }
 
-func parse(data string) (string, error) {
+func parse(data string) (*string, error) {
 	for _, l := range strings.Split(data, "\n") {
 		addr, err := parseLine(l)
 
@@ -48,7 +48,7 @@ func parse(data string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("malformed result %s, %w", data, errors.New("parse error"))
+	return nil, fmt.Errorf("malformed result %s, %w", data, errors.New("parse error"))
 }
 
 func resolve(name string, ver int, recType string) (dns.RR, error) {
@@ -58,11 +58,13 @@ func resolve(name string, ver int, recType string) (dns.RR, error) {
 		return nil, err
 	}
 
-	addr, err := parse(string(out))
+	addrPtr, err := parse(string(out))
 
 	if err != nil {
 		return nil, err
 	}
+
+	addr := *addrPtr
 
 	if strings.Contains(addr, "%") {
 		return nil, fmt.Errorf("bad address %s, %w", addr, errors.New("link local"))
