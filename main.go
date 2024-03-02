@@ -1,22 +1,23 @@
 package main
 
 import (
-	"os"
-
-	"github.com/sirupsen/logrus"
+	"fmt"
+	"github.com/miekg/dns"
 )
 
 func main() {
-	logger := logrus.New()
-	cfg, err := parseArgs(logger)
-	if err != nil {
-		os.Exit(1)
+	// add dns handlers
+	handler := func(w dns.ResponseWriter, r *dns.Msg) {
+		m := createDNSReply(r)
+		m.SetReply(r)
+		w.WriteMsg(m)
 	}
-
-	// TODO: add warning if current process doesn't have CAP_NET_BIND_SERVICE?
-
-	err = runServer(logger, cfg)
-	if err != nil {
-		logger.WithError(err).Fatal("server failed to start")
+	dns.HandleFunc("local.", handler)
+	// start DNS server
+	dserver := &dns.Server{
+		Addr: fmt.Sprintf("%s:%d", "localhost", 5354),
+		Net:  "udp",
 	}
+	defer dserver.Shutdown()
+	dserver.ListenAndServe()
 }
