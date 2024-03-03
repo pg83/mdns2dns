@@ -11,6 +11,7 @@ import (
 
 var (
 	MalformedRec = errors.New("malformed record")
+	BadAddress = errors.New("bad address")
 )
 
 func parseLine(data string) (*string, error) {
@@ -67,7 +68,7 @@ func resolve(name string, ver int, recType string) (dns.RR, error) {
 	addr := *addrPtr
 
 	if strings.Contains(addr, "%") {
-		return nil, fmt.Errorf("bad address %s, %w", addr, errors.New("link local"))
+		return nil, fmt.Errorf("link local address %s, %w", addr, BadAddress)
 	}
 
 	return dns.NewRR(fmt.Sprintf("%s %s %s", name, recType, addr))
